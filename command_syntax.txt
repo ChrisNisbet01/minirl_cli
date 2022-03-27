@@ -1,0 +1,61 @@
+#define SEMICOLON: ';'
+#define AND_CONDITION: "&&"
+#define OR_CONDITION: "||"
+#define LBRACE: '('
+#define RBRACE: ')'
+#define DOUBLE_QUOTE: '\"'
+#define SINGLE_QUOTE: '\''
+#define STRING: [_a-zA-Z0-9]*
+#define COMMAND_NAME: [_a-zA-z]STRING
+#define EOL \n
+#define WHITESPACE [ \t]+
+
+list: 
+    expr; expr
+    | expr
+
+expr:
+	( expr )
+    | expr condition expr
+    | cmd
+
+cmd:
+    name args
+    | name
+
+args:
+    args arg
+    | arg
+
+arg:
+    name
+
+
+command_list:
+	command_group SEMICOLON command_group
+	| command_group
+
+command_group:
+	LBRACE command_group RBRACE
+	command_group condition command_group
+	| command
+
+command:
+  command_name args
+  | command_name
+ 
+command_name: STRING
+
+condition:
+	AND_CONDITION
+	| OR_CONDITION	  
+      
+args:
+  args arg
+  | arg
+
+arg:
+  STRING
+  | DOUBLE_QUOTE STRING DOUBLE_QUOTE
+  | SINGLE_QUOTE STRING SINGLE_QUOTE
+

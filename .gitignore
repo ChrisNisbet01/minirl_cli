@@ -1,0 +1,9 @@
+/build/
+*.o
+*.lex.c
+*.lex.h
+*.yacc.c
+*.yacc.h
+
+/src/command_parser
+/tests/cram/.venv/

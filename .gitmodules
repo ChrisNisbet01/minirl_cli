@@ -1,0 +1,3 @@
+[submodule "tinyrl"]
+	path = tinyrl
+	url = git@github.com:philipc/tinyrl.git
