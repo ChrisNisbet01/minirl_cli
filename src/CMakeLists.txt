@@ -41,11 +41,11 @@ set(SOURCE_FILES
 )
 
 add_compile_definitions(_GNU_SOURCE)
-add_executable(tinyrl_cli ${SOURCE_FILES})
-add_dependencies(tinyrl_cli CommandParser)
+add_executable(linenoise_cli ${SOURCE_FILES})
+add_dependencies(linenoise_cli CommandParser)
 
-target_link_libraries(tinyrl_cli LINK_PUBLIC tinyrl)
-target_include_directories(tinyrl_cli 
+target_link_libraries(linenoise_cli LINK_PUBLIC linenoise)
+target_include_directories(linenoise_cli 
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}")
 

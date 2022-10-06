@@ -1,11 +1,14 @@
 #include "command_parser.h"
 
-#include <tinyrl.h>
+#include <linenoise.h>
+#if 0
 #include <history.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>
 
+#if 0
 static char const *
 get_previous_line(struct tinyrl_history const * const rl_history)
 {
@@ -44,7 +47,26 @@ update_history(
     {
         tinyrl_history_add(rl_history, line);
     }
+
 }
+#else
+
+static void
+update_history(
+    char const * const line)
+{
+#if 0
+    if (line_differs_from_previous(rl_history, line))
+    {
+        tinyrl_history_add(rl_history, line);
+    }
+#else
+    linenoiseHistoryAdd(line);
+#endif
+
+}
+
+#endif
 
 static bool
 run_command_line(char const * const line)
@@ -72,6 +94,7 @@ run_command_line(char const * const line)
 static void
 run_commands_via_prompt(void)
 {
+#if 0
     struct tinyrl * const rl = tinyrl_new(stdin, stdout);
     struct tinyrl_history * const rl_history = tinyrl_history_new(rl, 10);
     char * line;
@@ -99,6 +122,31 @@ run_commands_via_prompt(void)
 
 	tinyrl_history_delete(rl_history);
 	tinyrl_delete(rl);
+#else
+    char * line;
+
+    fprintf(stdout, "'q' to quit\n");
+
+    while ((line = linenoise("prompt>")) != NULL)
+    {
+        fprintf(stdout, "got line: %s\n", line);
+
+        if (line[0] == 'q')
+        {
+            free(line);
+            break;
+        }
+
+        if (line[0] != '\0')
+        {
+            update_history(line);
+            run_command_line(line);
+        }
+
+        free(line);
+    }
+#endif
+
 }
 
 int
