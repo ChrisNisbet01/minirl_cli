@@ -83,6 +83,20 @@ char *hints_cb(const char *buf, int *color, int *bold)
 }
 #endif
 
+#define TAB 9
+static bool
+tab_handler(linenoise_st * const linenoise_ctx,
+            char const key,
+            void * const user_ctx)
+{
+    linenoiseCompletions * lc = linenoise_completions_get(linenoise_ctx);
+
+    linenoiseAddCompletion(lc, "hello");
+    linenoiseAddCompletion(lc, "help");
+
+    return true;
+}
+
 static void
 run_commands_via_prompt(bool const print_raw_codes)
 {
@@ -106,6 +120,7 @@ run_commands_via_prompt(bool const print_raw_codes)
     linenoiseBeepControl(linenoise_ctx, enable_beep);
     linenoiseSetMultiLine(linenoise_ctx, multiline_mode);
     linenoiseSetCompletionCallback(linenoise_ctx, completion_cb);
+    linenoise_bind_key(linenoise_ctx, TAB, tab_handler, NULL);
 
 #ifdef WITH_HINTS
     linenoiseSetHintsCallback(linenoise_ctx, hints_cb);
