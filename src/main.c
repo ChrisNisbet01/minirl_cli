@@ -91,6 +91,11 @@ tab_handler(linenoise_st * const linenoise_ctx,
 {
     linenoiseCompletions * lc = linenoise_completions_get(linenoise_ctx);
 
+    char const * const line = linenoise_line_get(linenoise_ctx);
+    size_t point = linenoise_point_get(linenoise_ctx);
+
+    fprintf(stderr, "line '%s' point %zu\n", line, point);
+
     linenoiseAddCompletion(lc, "hello");
     linenoiseAddCompletion(lc, "1help");
     linenoiseAddCompletion(lc, "2help");
