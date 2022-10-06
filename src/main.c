@@ -63,6 +63,26 @@ print_tinyrl_output(int const fd)
     fprintf(stdout, "%s", buf);
 }
 
+static void completion_cb(char const * const buf, linenoiseCompletions * const lc)
+{
+    if (buf[0] == 'h') {
+        linenoiseAddCompletion(lc,"hello");
+        linenoiseAddCompletion(lc,"hello there");
+    }
+}
+
+#ifdef WITH_HINTS
+char *hints_cb(const char *buf, int *color, int *bold)
+{
+    if (!strcasecmp(buf,"hello")) {
+        *color = 35;
+        *bold = 0;
+        return " World";
+    }
+    return NULL;
+}
+#endif
+
 static void
 run_commands_via_prompt(bool const print_raw_codes)
 {
@@ -82,7 +102,14 @@ run_commands_via_prompt(bool const print_raw_codes)
 
     linenoise_st * linenoise_ctx = linenoise_new(stdin, output_fp);
     bool const enable_beep = false;
+    bool const multiline_mode = true;
     linenoiseBeepControl(linenoise_ctx, enable_beep);
+    linenoiseSetMultiLine(linenoise_ctx, multiline_mode);
+    linenoiseSetCompletionCallback(linenoise_ctx, completion_cb);
+
+#ifdef WITH_HINTS
+    linenoiseSetHintsCallback(linenoise_ctx, hints_cb);
+#endif
 
     fprintf(stdout, "'q' to quit\n");
 
