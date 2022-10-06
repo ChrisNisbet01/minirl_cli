@@ -67,35 +67,6 @@ print_tinyrl_output(int const fd)
 static void
 run_commands_via_prompt(void)
 {
-#if 0
-    struct tinyrl * const rl = tinyrl_new(stdin, stdout);
-    struct tinyrl_history * const rl_history = tinyrl_history_new(rl, 10);
-    char * line;
-
-    fprintf(stdout, "'q' to quit\n");
-
-    while ((line=tinyrl_readline(rl, "prompt>")) != NULL)
-    {
-        fprintf(stdout, "got line: %s\n", line);
-
-        if (line[0] == 'q')
-        {
-            free(line);
-            break;
-        }
-
-        if (line[0] != '\0')
-        {
-            update_history(rl_history, line);
-            run_command_line(line);
-        }
-
-        free(line);
-    }
-
-	tinyrl_history_delete(rl_history);
-	tinyrl_delete(rl);
-#else
     int output_pipe[2];
 
     pipe2(output_pipe, O_NONBLOCK);
@@ -109,7 +80,7 @@ run_commands_via_prompt(void)
     fprintf(stdout, "'q' to quit\n");
 
     char * line;
-    while ((line = linenoise("prompt>")) != NULL)
+    while ((line = linenoise(linenoise_ctx, "prompt>")) != NULL)
     {
         fprintf(stdout, "got line\n");
         fflush(output_fp);
@@ -127,13 +98,10 @@ run_commands_via_prompt(void)
             run_command_line(line);
         }
 
-        free(line);
+        linenoiseFree(line);
     }
 
     linenoise_delete(linenoise_ctx);
-
-#endif
-
 }
 
 int
