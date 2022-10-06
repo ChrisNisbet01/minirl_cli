@@ -123,6 +123,8 @@ run_commands_via_prompt(void)
 	tinyrl_history_delete(rl_history);
 	tinyrl_delete(rl);
 #else
+    linenoise_st * linenoise_ctx = linenoise_new(stdin, stdout);
+
     char * line;
 
     fprintf(stdout, "'q' to quit\n");
@@ -145,6 +147,9 @@ run_commands_via_prompt(void)
 
         free(line);
     }
+
+    linenoise_delete(linenoise_ctx);
+
 #endif
 
 }
