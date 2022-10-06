@@ -40,7 +40,7 @@ set(SOURCE_FILES
   command_lexer.c
 )
 
-
+add_compile_definitions(_GNU_SOURCE)
 add_executable(tinyrl_cli ${SOURCE_FILES})
 add_dependencies(tinyrl_cli CommandParser)
 
