@@ -1,72 +1,19 @@
 #include "command_parser.h"
 
 #include <linenoise.h>
-#if 0
-#include <history.h>
-#endif
 
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-#if 0
-static char const *
-get_previous_line(struct tinyrl_history const * const rl_history)
-{
-    char const * previous_line;
-    size_t const history_length = tinyrl_history_length(rl_history);
-
-    if (history_length == 0)
-    {
-        previous_line = NULL;
-        goto done;
-    }
-
-    size_t const last_index = history_length - 1;
-    previous_line = tinyrl_history_get(rl_history, last_index);
-
-done:
-    return previous_line;
-}
-
-static bool
-line_differs_from_previous(
-    struct tinyrl_history const * const rl_history, char const * const new_line)
-{
-    char const * const previous_line = get_previous_line(rl_history);
-    bool line_differs = previous_line == NULL
-        || strcmp(new_line, previous_line) != 0;
-
-    return line_differs;
-}
-
-static void
-update_history(
-    struct tinyrl_history * const rl_history, char const * const line)
-{
-    if (line_differs_from_previous(rl_history, line))
-    {
-        tinyrl_history_add(rl_history, line);
-    }
-
-}
-#else
 
 static void
 update_history(
     char const * const line)
 {
-#if 0
-    if (line_differs_from_previous(rl_history, line))
-    {
-        tinyrl_history_add(rl_history, line);
-    }
-#else
     linenoiseHistoryAdd(line);
-#endif
-
 }
-
-#endif
 
 static bool
 run_command_line(char const * const line)
@@ -89,6 +36,32 @@ run_command_line(char const * const line)
     }
 
     return success;
+}
+
+static void
+print_tinyrl_output(int const fd)
+{
+    int bytes_read;
+    char buf[200];
+    size_t buf_len = 0;
+
+    fprintf(stdout, "reading pipe\n");
+    do
+    {
+        char c;
+        bytes_read = read(fd, &c, sizeof c);
+        if (bytes_read > 0)
+        {
+            fprintf(stdout, "0x%x ", (unsigned)c);
+            buf[buf_len] = c;
+            buf_len++;
+        }
+    } while (bytes_read > 0);
+
+    fprintf(stdout, "\ndone reading pipe.\n");
+
+    buf[buf_len] = '\0';
+    fprintf(stdout, "%s", buf);
 }
 
 static void
@@ -123,7 +96,13 @@ run_commands_via_prompt(void)
 	tinyrl_history_delete(rl_history);
 	tinyrl_delete(rl);
 #else
-    linenoise_st * linenoise_ctx = linenoise_new(stdin, stdout);
+    int output_pipe[2];
+
+    pipe2(output_pipe, O_NONBLOCK);
+
+    FILE * const output_fp = fdopen(output_pipe[1], "wb");
+
+    linenoise_st * linenoise_ctx = linenoise_new(stdin, output_fp);
     bool const enable_beep = false;
     linenoiseBeepControl(linenoise_ctx, enable_beep);
 
@@ -132,7 +111,9 @@ run_commands_via_prompt(void)
     char * line;
     while ((line = linenoise("prompt>")) != NULL)
     {
-        fprintf(stdout, "got line: %s\n", line);
+        fprintf(stdout, "got line\n");
+        fflush(output_fp);
+        print_tinyrl_output(output_pipe[0]);
 
         if (line[0] == 'q')
         {
