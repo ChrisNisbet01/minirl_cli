@@ -9,10 +9,9 @@
 
 
 static void
-update_history(
-    char const * const line)
+update_history(linenoise_st * const linenoise_ctx, char const * const line)
 {
-    linenoiseHistoryAdd(line);
+    linenoiseHistoryAdd(linenoise_ctx, line);
 }
 
 static bool
@@ -94,7 +93,7 @@ run_commands_via_prompt(void)
 
         if (line[0] != '\0')
         {
-            update_history(line);
+            update_history(linenoise_ctx, line);
             run_command_line(line);
         }
 
