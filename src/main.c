@@ -124,11 +124,12 @@ run_commands_via_prompt(void)
 	tinyrl_delete(rl);
 #else
     linenoise_st * linenoise_ctx = linenoise_new(stdin, stdout);
-
-    char * line;
+    bool const enable_beep = false;
+    linenoiseBeepControl(linenoise_ctx, enable_beep);
 
     fprintf(stdout, "'q' to quit\n");
 
+    char * line;
     while ((line = linenoise("prompt>")) != NULL)
     {
         fprintf(stdout, "got line: %s\n", line);
