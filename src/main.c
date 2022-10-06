@@ -92,7 +92,21 @@ tab_handler(linenoise_st * const linenoise_ctx,
     linenoiseCompletions * lc = linenoise_completions_get(linenoise_ctx);
 
     linenoiseAddCompletion(lc, "hello");
-    linenoiseAddCompletion(lc, "help");
+    linenoiseAddCompletion(lc, "1help");
+    linenoiseAddCompletion(lc, "2help");
+    linenoiseAddCompletion(lc, "3help");
+    linenoiseAddCompletion(lc, "4help");
+    linenoiseAddCompletion(lc, "5help");
+    linenoiseAddCompletion(lc, "6help");
+    linenoiseAddCompletion(lc, "7help");
+    linenoiseAddCompletion(lc, "8help");
+    linenoiseAddCompletion(lc, "9help");
+    linenoiseAddCompletion(lc, "0help");
+    linenoiseAddCompletion(lc, "ahelp");
+    linenoiseAddCompletion(lc, "bhelp");
+    linenoiseAddCompletion(lc, "chelp");
+    linenoiseAddCompletion(lc, "dhelp");
+    linenoiseAddCompletion(lc, "elast");
 
     return true;
 }
