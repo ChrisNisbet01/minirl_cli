@@ -2,10 +2,17 @@
 
 #include <linenoise.h>
 
+#include <ctype.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+
+#define TAB 0x09
+#define LF  0x0a
+#define CR  0x0d
+#define ESC 0x1b
 
 
 static void
@@ -36,13 +43,51 @@ run_command_line(char const * const line)
 
     return success;
 }
+typedef struct line_buf_st
+{
+    size_t len;
+    size_t capacity;
+    uint8_t * buf;
+} line_buf_st;
+
+static void
+line_buf_reset(line_buf_st * const line_buf)
+{
+    free(line_buf->buf);
+    line_buf->buf = NULL;
+    line_buf->len = 0;
+    line_buf->capacity = 0;
+}
+
+static void
+line_buf_init(line_buf_st * const line_buf)
+{
+    line_buf->buf = NULL;
+    line_buf_reset(line_buf);
+}
+
+static void
+line_buf_append(line_buf_st * const line_buf, uint8_t b)
+{
+    if (line_buf->len >= line_buf->capacity)
+    {
+        size_t const new_capacity = line_buf->capacity + 100;
+
+        line_buf->buf = realloc(line_buf->buf, new_capacity + 1);
+        line_buf->capacity = new_capacity;
+    }
+    line_buf->buf[line_buf->len] = b;
+    line_buf->len++;
+    line_buf->buf[line_buf->len] = '\0';
+}
 
 static void
 print_tinyrl_output(int const fd)
 {
     int bytes_read;
-    char buf[200];
-    size_t buf_len = 0;
+    line_buf_st line_buf;
+
+    line_buf_init(&line_buf);
 
     fprintf(stdout, "reading pipe\n");
     do
@@ -51,16 +96,38 @@ print_tinyrl_output(int const fd)
         bytes_read = read(fd, &c, sizeof c);
         if (bytes_read > 0)
         {
-            fprintf(stdout, "0x%x ", (unsigned)c);
-            buf[buf_len] = c;
-            buf_len++;
+            if (isprint(c))
+            {
+                fprintf(stdout, "%c", c);
+            }
+            else if (c == ESC)
+            {
+                fprintf(stdout, "<ESC>");
+            }
+            else if (c == TAB)
+            {
+                fprintf(stdout, "<TAB>");
+            }
+            else if (c == CR)
+            {
+                fprintf(stdout, "<CR>");
+            }
+            else if (c == LF)
+            {
+                fprintf(stdout, "<LF>");
+            }
+            else
+            {
+                fprintf(stdout, "<0x%x>", (unsigned)c);
+            }
+            line_buf_append(&line_buf, c);
         }
     } while (bytes_read > 0);
 
     fprintf(stdout, "\ndone reading pipe.\n");
 
-    buf[buf_len] = '\0';
-    fprintf(stdout, "%s", buf);
+    fprintf(stdout, "%s", line_buf.buf);
+    line_buf_reset(&line_buf);
 }
 
 static void completion_cb(char const * const buf, linenoiseCompletions * const lc)
@@ -82,8 +149,6 @@ char *hints_cb(const char *buf, int *color, int *bold)
     return NULL;
 }
 #endif
-
-#define TAB 9
 
 typedef struct cli_split_st
 {
@@ -151,7 +216,7 @@ run_commands_via_prompt(bool const print_raw_codes)
 
     linenoise_st * linenoise_ctx = linenoise_new(stdin, output_fp);
     bool const enable_beep = false;
-    bool const multiline_mode = true;
+    bool const multiline_mode = false;
     linenoiseBeepControl(linenoise_ctx, enable_beep);
     linenoiseSetMultiLine(linenoise_ctx, multiline_mode);
     linenoiseSetCompletionCallback(linenoise_ctx, completion_cb);
