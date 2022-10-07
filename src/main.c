@@ -84,6 +84,32 @@ char *hints_cb(const char *buf, int *color, int *bold)
 #endif
 
 #define TAB 9
+
+typedef struct cli_split_st
+{
+    size_t len;
+    char **cvec;
+} cli_split_st;
+
+void cli_split_add_word(cli_split_st * cli_split, const char * str)
+{
+    char * copy, ** cvec;
+
+    copy = strdup(str);
+    if (copy == NULL)
+        return;
+
+    cvec = realloc(cli_split->cvec, sizeof(*cli_split->cvec) * (cli_split->len + 2));
+    if (cvec == NULL)
+    {
+        free(copy);
+        return;
+    }
+    cli_split->cvec = cvec;
+    cli_split->cvec[cli_split->len++] = copy;
+    cli_split->cvec[cli_split->len] = NULL;
+}
+
 static bool
 tab_handler(linenoise_st * const linenoise_ctx,
             char const key,
@@ -96,22 +122,12 @@ tab_handler(linenoise_st * const linenoise_ctx,
 
     fprintf(stderr, "line '%s' point %zu\n", line, point);
 
-    linenoiseAddCompletion(lc, "hello");
-    linenoiseAddCompletion(lc, "1help");
-    linenoiseAddCompletion(lc, "2help");
-    linenoiseAddCompletion(lc, "3help");
-    linenoiseAddCompletion(lc, "4help");
-    linenoiseAddCompletion(lc, "5help");
-    linenoiseAddCompletion(lc, "6help");
-    linenoiseAddCompletion(lc, "7help");
-    linenoiseAddCompletion(lc, "8help");
-    linenoiseAddCompletion(lc, "9help");
-    linenoiseAddCompletion(lc, "0help");
-    linenoiseAddCompletion(lc, "ahelp");
-    linenoiseAddCompletion(lc, "bhelp");
-    linenoiseAddCompletion(lc, "chelp");
-    linenoiseAddCompletion(lc, "dhelp");
-    linenoiseAddCompletion(lc, "elast");
+    cli_split_st cli_split = { 0 };
+
+    cli_split_add_word(&cli_split, "help");
+    cli_split_add_word(&cli_split, "hello");
+
+    bool ret = linenoise_complete(linenoise_ctx, 2, cli_split.cvec, true);
 
     return true;
 }
