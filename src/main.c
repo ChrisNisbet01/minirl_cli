@@ -1,4 +1,6 @@
 #include "command_parser.h"
+#include "cli_helpers.h"
+#include "sl.h"
 
 #include <linenoise.h>
 
@@ -122,7 +124,8 @@ print_tinyrl_output(int const fd)
             }
             line_buf_append(&line_buf, c);
         }
-    } while (bytes_read > 0);
+    }
+    while (bytes_read > 0);
 
     fprintf(stdout, "\ndone reading pipe.\n");
 
@@ -132,16 +135,18 @@ print_tinyrl_output(int const fd)
 
 static void completion_cb(char const * const buf, linenoiseCompletions * const lc)
 {
-    if (buf[0] == 'h') {
-        linenoiseAddCompletion(lc,"hello");
-        linenoiseAddCompletion(lc,"hello there");
+    if (buf[0] == 'h')
+    {
+        linenoiseAddCompletion(lc, "hello");
+        linenoiseAddCompletion(lc, "hello there");
     }
 }
 
 #ifdef WITH_HINTS
-char *hints_cb(const char *buf, int *color, int *bold)
+char * hints_cb(const char * buf, int * color, int * bold)
 {
-    if (!strcasecmp(buf,"hello")) {
+    if (!strcasecmp(buf, "hello"))
+    {
         *color = 35;
         *bold = 0;
         return " World";
@@ -150,29 +155,137 @@ char *hints_cb(const char *buf, int *color, int *bold)
 }
 #endif
 
-typedef struct cli_split_st
+struct cli_match
 {
-    size_t len;
-    char **cvec;
-} cli_split_st;
+    unsigned start; /* Start of the word that was matched */
+    char ** matches;
+    bool finished; /* We have a match but we may continue matching */
+};
 
-void cli_split_add_word(cli_split_st * cli_split, const char * str)
+static char * *
+cli_cmd_complete(char * * const words, char const * const partial, bool * finished)
 {
-    char * copy, ** cvec;
+    *finished = true;
+    char * * matches = NULL;
+    char ** w = words;
 
-    copy = strdup(str);
-    if (copy == NULL)
-        return;
-
-    cvec = realloc(cli_split->cvec, sizeof(*cli_split->cvec) * (cli_split->len + 2));
-    if (cvec == NULL)
+    if (partial != NULL)
     {
-        free(copy);
-        return;
+        matches = sl_new(NULL);
+        if (strncmp(partial, "hello", strlen(partial)) == 0)
+        {
+            matches = sl_append(matches, "hello");
+        }
+        if (strncmp(partial, "help", strlen(partial)) == 0)
+        {
+            matches = sl_append(matches, "help");
+        }
+        if (strncmp(partial, "hellelujah", strlen(partial)) == 0)
+        {
+            matches = sl_append(matches, "hellelujah");
+        }
     }
-    cli_split->cvec = cvec;
-    cli_split->cvec[cli_split->len++] = copy;
-    cli_split->cvec[cli_split->len] = NULL;
+
+    return matches;
+}
+static void cli_match(linenoise_st * const linenoise_ctx,
+                      struct cli_split * split,
+                      struct cli_match * match)
+{
+    unsigned len;
+    bool quoted;
+    char ** matches;
+    char ** s;
+
+#if 0
+    /* Update the config (if modified) so that the command completion is not
+     * using a stale config. */
+    if (cli->view == &cli_root_view)
+    cli_reload(cli);
+
+#endif
+    matches = cli_cmd_complete(split->words, split->partial, &match->finished);
+
+    /* Accept all matches that start with the partial word.
+     * When the partial word contains quotes or escapes,
+     * only accept exact matches */
+    if (split->partial)
+    {
+        len = strlen(split->partial);
+        quoted = strcmp(split->partial, split->partial_raw) != 0;
+        for (s = matches; s && *s;)
+        {
+            if (quoted && strcmp(*s, split->partial) == 0)
+            {
+                sl_free(matches);
+                matches = sl_new(split->partial_raw);
+                break;
+            }
+            else if (!quoted && strncmp(*s, split->partial, len) == 0)
+            {
+                s++;
+            }
+            else
+            {
+                free(sl_remove(s));
+            }
+        }
+    }
+
+    match->matches = matches;
+    match->start = linenoise_point_get(linenoise_ctx);
+    if (split->partial_raw != NULL)
+    {
+        match->start -= strlen(split->partial_raw);
+    }
+}
+
+static void cli_match_free(struct cli_match * match)
+{
+    sl_free(match->matches);
+}
+
+static void cli_split(linenoise_st * const linenoise_ctx, bool partial, struct cli_split * split)
+{
+    char * s;
+
+    if (partial)
+        s = strndup(linenoise_line_get(linenoise_ctx), linenoise_point_get(linenoise_ctx));
+    else
+        s = strdup(linenoise_line_get(linenoise_ctx));
+    cli_split_line(s, partial, split);
+    free(s);
+}
+
+static bool cli_complete(linenoise_st * const linenoise_ctx, bool allow_prefix)
+{
+    struct cli_split split;
+    struct cli_match match;
+    bool ret;
+
+    cli_split(linenoise_ctx, true, &split);
+    cli_match(linenoise_ctx, &split, &match);
+
+    if (allow_prefix && split.partial && sl_find(match.matches, split.partial))
+    {
+        /* Return success without showing completions when the user presses
+         * space on an exact match. */
+        ret = true;
+    }
+    else
+    {
+        ret = linenoise_complete(linenoise_ctx, match.start, match.matches, allow_prefix);
+        if (!allow_prefix && !match.finished)
+        {
+            /* Don't jump to next arg when the user presses tab and the parser
+             * has not finished providing completions. */
+            ret = false;
+        }
+    }
+
+    cli_match_free(&match);
+    cli_split_free(&split);
+    return ret;
 }
 
 static bool
@@ -180,19 +293,12 @@ tab_handler(linenoise_st * const linenoise_ctx,
             char const key,
             void * const user_ctx)
 {
-    char const * const line = linenoise_line_get(linenoise_ctx);
-    size_t point = linenoise_point_get(linenoise_ctx);
+    if (!cli_complete(linenoise_ctx, false))
+    {
+        return true;
+    }
 
-    fprintf(stderr, "line '%s' point %zu\n", line, point);
-
-    cli_split_st cli_split = { 0 };
-
-    cli_split_add_word(&cli_split, "help");
-    cli_split_add_word(&cli_split, "hello");
-
-    bool ret = linenoise_complete(linenoise_ctx, 2, cli_split.cvec, true);
-
-    return true;
+    return linenoise_insert_text(linenoise_ctx, " ");
 }
 
 static void

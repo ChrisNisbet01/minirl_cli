@@ -38,6 +38,12 @@ set(SOURCE_FILES
   command_definition.h
   command_parser.c
   command_lexer.c
+  cli_helpers.c
+  cli_helpers.h
+  sl.c
+  sl.h
+  util.c
+  util.h
 )
 
 add_compile_definitions(_GNU_SOURCE)
