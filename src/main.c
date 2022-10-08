@@ -133,15 +133,6 @@ print_tinyrl_output(int const fd)
     line_buf_reset(&line_buf);
 }
 
-static void completion_cb(char const * const buf, linenoiseCompletions * const lc)
-{
-    if (buf[0] == 'h')
-    {
-        linenoiseAddCompletion(lc, "hello");
-        linenoiseAddCompletion(lc, "hello there");
-    }
-}
-
 #ifdef WITH_HINTS
 char * hints_cb(const char * buf, int * color, int * bold)
 {
@@ -300,7 +291,9 @@ static bool cli_complete(linenoise_st * const linenoise_ctx, bool allow_prefix)
     cli_split(linenoise_ctx, true, &split);
     cli_match(linenoise_ctx, &split, &match);
 
-    if (allow_prefix && split.partial && sl_find(match.matches, split.partial))
+    if (allow_prefix
+        && split.partial != NULL
+        && sl_find(match.matches, split.partial))
     {
         /* Return success without showing completions when the user presses
          * space on an exact match. */
@@ -335,6 +328,25 @@ tab_handler(linenoise_st * const linenoise_ctx,
     return linenoise_insert_text(linenoise_ctx, " ");
 }
 
+static bool space_handler(
+    linenoise_st * const linenoise_ctx,
+    char const key,
+    void * const user_ctx)
+{
+	const char * const line = linenoise_line_get(linenoise_ctx);
+    if (line && *line == '#')
+    {
+		return linenoise_insert_text(linenoise_ctx, " ");
+    }
+
+    if (!cli_complete(linenoise_ctx, true))
+    {
+		return false;
+    }
+
+	return linenoise_insert_text(linenoise_ctx, " ");
+}
+
 static void
 run_commands_via_prompt(bool const print_raw_codes)
 {
@@ -357,8 +369,8 @@ run_commands_via_prompt(bool const print_raw_codes)
     bool const multiline_mode = false;
     linenoiseBeepControl(linenoise_ctx, enable_beep);
     linenoiseSetMultiLine(linenoise_ctx, multiline_mode);
-    linenoiseSetCompletionCallback(linenoise_ctx, completion_cb);
     linenoise_bind_key(linenoise_ctx, TAB, tab_handler, NULL);
+    linenoise_bind_key(linenoise_ctx, ' ', space_handler, NULL);
 
 #ifdef WITH_HINTS
     linenoiseSetHintsCallback(linenoise_ctx, hints_cb);
