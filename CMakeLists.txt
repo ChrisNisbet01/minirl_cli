@@ -5,6 +5,7 @@ add_subdirectory(src)
 
 # Don't want support for 'hints' 
 set(WITH_HINTS OFF CACHE INTERNAL "" FORCE)
+set(WITH_KEY_BINDING ON CACHE INTERNAL "" FORCE)
 add_subdirectory(linenoise)
 
 IF(UNIT_TESTING)
