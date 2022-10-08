@@ -169,6 +169,37 @@ cli_cmd_complete(char * * const words, char const * const partial, bool * finish
     char * * matches = NULL;
     char ** w = words;
 
+    if (w == NULL || *w == NULL || *w[0] == '\0')
+    {
+        matches = sl_new(NULL);
+        matches = sl_append(matches,
+                            "config",
+                            "exit",
+                            "analyzer",
+                            "cat",
+                            "clear",
+                            "container",
+                            "cp",
+                            "help",
+                            "ls",
+                            "mkdir",
+                            "modem",
+                            "monitoring",
+                            "more",
+                            "mv",
+                            "ping",
+                            "poweroff",
+                            "reboot",
+                            "rm",
+                            "scp",
+                            "show",
+                            "speedtest",
+                            "ssh",
+                            "system",
+                            "telnet",
+                            "traceroute");
+        goto done;
+    }
     if (partial != NULL)
     {
         matches = sl_new(NULL);
@@ -185,6 +216,9 @@ cli_cmd_complete(char * * const words, char const * const partial, bool * finish
             matches = sl_append(matches, "hellelujah");
         }
     }
+
+done:
+    sl_sort(matches);
 
     return matches;
 }
