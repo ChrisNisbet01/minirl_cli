@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
 project(tinyrl_cli)
 
-add_subdirectory(linenoise)
 add_subdirectory(src)
+
+# Don't want support for 'hints' 
+set(WITH_HINTS OFF CACHE INTERNAL "" FORCE)
+add_subdirectory(linenoise)
 
 IF(UNIT_TESTING)
   ENABLE_TESTING()
