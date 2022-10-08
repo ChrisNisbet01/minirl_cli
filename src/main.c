@@ -180,8 +180,6 @@ tab_handler(linenoise_st * const linenoise_ctx,
             char const key,
             void * const user_ctx)
 {
-    linenoiseCompletions * lc = linenoise_completions_get(linenoise_ctx);
-
     char const * const line = linenoise_line_get(linenoise_ctx);
     size_t point = linenoise_point_get(linenoise_ctx);
 
