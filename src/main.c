@@ -353,7 +353,7 @@ run_commands_via_prompt(bool const print_raw_codes)
 
     linenoise_st * linenoise_ctx = linenoise_new(stdin, output_fp);
     bool const enable_beep = false;
-    bool const multiline_mode = false;
+    bool const multiline_mode = true;
     linenoiseBeepControl(linenoise_ctx, enable_beep);
     linenoiseSetMultiLine(linenoise_ctx, multiline_mode);
     linenoise_bind_key(linenoise_ctx, TAB, tab_handler, NULL);
