@@ -133,19 +133,6 @@ print_tinyrl_output(int const fd)
     line_buf_reset(&line_buf);
 }
 
-#ifdef WITH_HINTS
-char * hints_cb(const char * buf, int * color, int * bold)
-{
-    if (!strcasecmp(buf, "hello"))
-    {
-        *color = 35;
-        *bold = 0;
-        return " World";
-    }
-    return NULL;
-}
-#endif
-
 struct cli_match
 {
     unsigned start; /* Start of the word that was matched */
@@ -371,10 +358,6 @@ run_commands_via_prompt(bool const print_raw_codes)
     linenoiseSetMultiLine(linenoise_ctx, multiline_mode);
     linenoise_bind_key(linenoise_ctx, TAB, tab_handler, NULL);
     linenoise_bind_key(linenoise_ctx, ' ', space_handler, NULL);
-
-#ifdef WITH_HINTS
-    linenoiseSetHintsCallback(linenoise_ctx, hints_cb);
-#endif
 
     fprintf(stdout, "'q' to quit\n");
 
