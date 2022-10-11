@@ -45,6 +45,7 @@ run_command_line(char const * const line)
 
     return success;
 }
+
 typedef struct line_buf_st
 {
     size_t len;
@@ -321,6 +322,7 @@ static bool space_handler(
     void * const user_ctx)
 {
 	const char * const line = linenoise_line_get(linenoise_ctx);
+
     if (line && *line == '#')
     {
 		return linenoise_insert_text(linenoise_ctx, " ");
