@@ -20,7 +20,7 @@
 static void
 update_history(linenoise_st * const linenoise_ctx, char const * const line)
 {
-    linenoiseHistoryAdd(linenoise_ctx, line);
+    linenoise_history_add(linenoise_ctx, line);
 }
 
 static bool
@@ -356,8 +356,8 @@ run_commands_via_prompt(bool const print_raw_codes)
     linenoise_st * linenoise_ctx = linenoise_new(stdin, output_fp);
     bool const enable_beep = false;
     bool const multiline_mode = true;
-    linenoiseBeepControl(linenoise_ctx, enable_beep);
-    linenoiseSetMultiLine(linenoise_ctx, multiline_mode);
+    linenoise_beep_control(linenoise_ctx, enable_beep);
+    linenoise_set_multi_line(linenoise_ctx, multiline_mode);
     linenoise_bind_key(linenoise_ctx, TAB, tab_handler, NULL);
     linenoise_bind_key(linenoise_ctx, ' ', space_handler, NULL);
 
@@ -385,7 +385,7 @@ run_commands_via_prompt(bool const print_raw_codes)
             run_command_line(line);
         }
 
-        linenoiseFree(line);
+        linenoise_free(line);
     }
 
     linenoise_delete(linenoise_ctx);
