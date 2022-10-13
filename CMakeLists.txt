@@ -4,7 +4,6 @@ project(tinyrl_cli)
 add_subdirectory(src)
 
 # Don't want support for 'hints' 
-set(WITH_HINTS OFF CACHE INTERNAL "" FORCE)
 set(QUERY_TERMINAL_FOR_WIDTH OFF CACHE INTERNAL "" FORCE)
 set(WITH_KEY_BINDING ON CACHE INTERNAL "" FORCE)
 set(WITH_NATIVE_COMPLETION OFF CACHE INTERNAL "" FORCE)
