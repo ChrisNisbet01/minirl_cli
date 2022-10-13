@@ -376,7 +376,6 @@ run_commands_via_prompt(bool const print_raw_codes)
 
     linenoise_st * linenoise_ctx = linenoise_new(stdin, output_fp);
     bool const multiline_mode = true;
-    linenoise_set_multi_line(linenoise_ctx, multiline_mode);
     linenoise_bind_key(linenoise_ctx, TAB, tab_handler, NULL);
     linenoise_bind_key(linenoise_ctx, ' ', space_handler, NULL);
     linenoise_bind_keyseq(linenoise_ctx, ESCAPESTR "[1;5C", ctrl_right_handler, NULL);
