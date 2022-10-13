@@ -10,6 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#define ESCAPESTR "\x1b"
 
 #define TAB 0x09
 #define LF  0x0a
@@ -305,7 +306,8 @@ static bool cli_complete(linenoise_st * const linenoise_ctx, bool allow_prefix)
 
 static bool
 tab_handler(linenoise_st * const linenoise_ctx,
-            char const key,
+            uint32_t * const flags,
+            char const * const key,
             void * const user_ctx)
 {
     if (!cli_complete(linenoise_ctx, false))
@@ -318,7 +320,8 @@ tab_handler(linenoise_st * const linenoise_ctx,
 
 static bool space_handler(
     linenoise_st * const linenoise_ctx,
-    char const key,
+    uint32_t * const flags,
+    char const * const key,
     void * const user_ctx)
 {
 	const char * const line = linenoise_line_get(linenoise_ctx);
@@ -334,6 +337,28 @@ static bool space_handler(
     }
 
 	return linenoise_insert_text(linenoise_ctx, " ");
+}
+
+static bool ctrl_right_handler(
+    linenoise_st * const linenoise_ctx,
+    uint32_t * const flags,
+    char const * const key,
+    void * const user_ctx)
+{
+    fprintf(stderr, "ctrl-right\n");
+
+    return true;
+}
+
+static bool ctrl_left_handler(
+    linenoise_st * const linenoise_ctx,
+    uint32_t * const flags,
+    char const * const key,
+    void * const user_ctx)
+{
+    fprintf(stderr, "ctrl-left\n");
+
+    return true;
 }
 
 static void
@@ -360,6 +385,8 @@ run_commands_via_prompt(bool const print_raw_codes)
     linenoise_set_multi_line(linenoise_ctx, multiline_mode);
     linenoise_bind_key(linenoise_ctx, TAB, tab_handler, NULL);
     linenoise_bind_key(linenoise_ctx, ' ', space_handler, NULL);
+    linenoise_bind_keyseq(linenoise_ctx, ESCAPESTR "[1;5C", ctrl_right_handler, NULL);
+    linenoise_bind_keyseq(linenoise_ctx, ESCAPESTR "[1;5D", ctrl_left_handler, NULL);
 
     fprintf(stdout, "'q' to quit\n");
 
