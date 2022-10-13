@@ -345,8 +345,6 @@ static bool ctrl_right_handler(
     char const * const key,
     void * const user_ctx)
 {
-    fprintf(stderr, "ctrl-right\n");
-
     return true;
 }
 
@@ -356,8 +354,6 @@ static bool ctrl_left_handler(
     char const * const key,
     void * const user_ctx)
 {
-    fprintf(stderr, "ctrl-left\n");
-
     return true;
 }
 
