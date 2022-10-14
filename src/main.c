@@ -2,7 +2,7 @@
 #include "cli_helpers.h"
 #include "sl.h"
 
-#include <linenoise.h>
+#include <minirl.h>
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -19,9 +19,9 @@
 
 
 static void
-update_history(linenoise_st * const linenoise_ctx, char const * const line)
+update_history(minirl_st * const minirl, char const * const line)
 {
-    linenoise_history_add(linenoise_ctx, line);
+    minirl_history_add(minirl, line);
 }
 
 static bool
@@ -202,7 +202,7 @@ done:
 
     return matches;
 }
-static void cli_match(linenoise_st * const linenoise_ctx,
+static void cli_match(minirl_st * const minirl,
                       struct cli_split * split,
                       struct cli_match * match)
 {
@@ -247,7 +247,7 @@ static void cli_match(linenoise_st * const linenoise_ctx,
     }
 
     match->matches = matches;
-    match->start = linenoise_point_get(linenoise_ctx);
+    match->start = minirl_point_get(minirl);
     if (split->partial_raw != NULL)
     {
         match->start -= strlen(split->partial_raw);
@@ -259,26 +259,26 @@ static void cli_match_free(struct cli_match * match)
     sl_free(match->matches);
 }
 
-static void cli_split(linenoise_st * const linenoise_ctx, bool partial, struct cli_split * split)
+static void cli_split(minirl_st * const minirl, bool partial, struct cli_split * split)
 {
     char * s;
 
     if (partial)
-        s = strndup(linenoise_line_get(linenoise_ctx), linenoise_point_get(linenoise_ctx));
+        s = strndup(minirl_line_get(minirl), minirl_point_get(minirl));
     else
-        s = strdup(linenoise_line_get(linenoise_ctx));
+        s = strdup(minirl_line_get(minirl));
     cli_split_line(s, partial, split);
     free(s);
 }
 
-static bool cli_complete(linenoise_st * const linenoise_ctx, bool allow_prefix)
+static bool cli_complete(minirl_st * const minirl, bool allow_prefix)
 {
     struct cli_split split;
     struct cli_match match;
     bool ret;
 
-    cli_split(linenoise_ctx, true, &split);
-    cli_match(linenoise_ctx, &split, &match);
+    cli_split(minirl, true, &split);
+    cli_match(minirl, &split, &match);
 
     if (allow_prefix
         && split.partial != NULL
@@ -290,7 +290,7 @@ static bool cli_complete(linenoise_st * const linenoise_ctx, bool allow_prefix)
     }
     else
     {
-        ret = linenoise_complete(linenoise_ctx, match.start, match.matches, allow_prefix);
+        ret = minirl_complete(minirl, match.start, match.matches, allow_prefix);
         if (!allow_prefix && !match.finished)
         {
             /* Don't jump to next arg when the user presses tab and the parser
@@ -305,42 +305,42 @@ static bool cli_complete(linenoise_st * const linenoise_ctx, bool allow_prefix)
 }
 
 static bool
-tab_handler(linenoise_st * const linenoise_ctx,
+tab_handler(minirl_st * const minirl,
             uint32_t * const flags,
             char const * const key,
             void * const user_ctx)
 {
-    if (!cli_complete(linenoise_ctx, false))
+    if (!cli_complete(minirl, false))
     {
         return true;
     }
 
-    return linenoise_insert_text(linenoise_ctx, " ");
+    return minirl_insert_text(minirl, " ");
 }
 
 static bool space_handler(
-    linenoise_st * const linenoise_ctx,
+    minirl_st * const minirl,
     uint32_t * const flags,
     char const * const key,
     void * const user_ctx)
 {
-	const char * const line = linenoise_line_get(linenoise_ctx);
+	const char * const line = minirl_line_get(minirl);
 
     if (line && *line == '#')
     {
-		return linenoise_insert_text(linenoise_ctx, " ");
+		return minirl_insert_text(minirl, " ");
     }
 
-    if (!cli_complete(linenoise_ctx, true))
+    if (!cli_complete(minirl, true))
     {
 		return false;
     }
 
-	return linenoise_insert_text(linenoise_ctx, " ");
+	return minirl_insert_text(minirl, " ");
 }
 
 static bool ctrl_right_handler(
-    linenoise_st * const linenoise_ctx,
+    minirl_st * const minirl,
     uint32_t * const flags,
     char const * const key,
     void * const user_ctx)
@@ -349,7 +349,7 @@ static bool ctrl_right_handler(
 }
 
 static bool ctrl_left_handler(
-    linenoise_st * const linenoise_ctx,
+    minirl_st * const minirl,
     uint32_t * const flags,
     char const * const key,
     void * const user_ctx)
@@ -374,17 +374,17 @@ run_commands_via_prompt(bool const print_raw_codes)
         output_fp = stdout;
     }
 
-    linenoise_st * linenoise_ctx = linenoise_new(stdin, output_fp);
+    minirl_st * minirl = minirl_new(stdin, output_fp);
     bool const multiline_mode = true;
-    linenoise_bind_key(linenoise_ctx, TAB, tab_handler, NULL);
-    linenoise_bind_key(linenoise_ctx, ' ', space_handler, NULL);
-    linenoise_bind_keyseq(linenoise_ctx, ESCAPESTR "[1;5C", ctrl_right_handler, NULL);
-    linenoise_bind_keyseq(linenoise_ctx, ESCAPESTR "[1;5D", ctrl_left_handler, NULL);
+    minirl_bind_key(minirl, TAB, tab_handler, NULL);
+    minirl_bind_key(minirl, ' ', space_handler, NULL);
+    minirl_bind_keyseq(minirl, ESCAPESTR "[1;5C", ctrl_right_handler, NULL);
+    minirl_bind_keyseq(minirl, ESCAPESTR "[1;5D", ctrl_left_handler, NULL);
 
     fprintf(stdout, "'q' to quit\n");
 
     char * line;
-    while ((line = linenoise(linenoise_ctx, "prompt>")) != NULL)
+    while ((line = minirl_readline(minirl, "prompt>")) != NULL)
     {
         fprintf(stdout, "got line\n");
         if (print_raw_codes)
@@ -401,14 +401,14 @@ run_commands_via_prompt(bool const print_raw_codes)
 
         if (line[0] != '\0')
         {
-            update_history(linenoise_ctx, line);
+            update_history(minirl, line);
             run_command_line(line);
         }
 
-        linenoise_free(line);
+        minirl_free(line);
     }
 
-    linenoise_delete(linenoise_ctx);
+    minirl_delete(minirl);
 }
 
 int

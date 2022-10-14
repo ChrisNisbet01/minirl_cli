@@ -47,11 +47,11 @@ set(SOURCE_FILES
 )
 
 add_compile_definitions(_GNU_SOURCE)
-add_executable(linenoise_cli ${SOURCE_FILES})
-add_dependencies(linenoise_cli CommandParser)
+add_executable(minirl_cli ${SOURCE_FILES})
+add_dependencies(minirl_cli CommandParser)
 
-target_link_libraries(linenoise_cli LINK_PUBLIC linenoise)
-target_include_directories(linenoise_cli 
+target_link_libraries(minirl_cli LINK_PUBLIC minirl)
+target_include_directories(minirl_cli 
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}")
 
