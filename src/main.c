@@ -27,6 +27,7 @@ update_history(minirl_st * const minirl, char const * const line)
 static bool
 run_command_line(char const * const line)
 {
+	return true;
     struct command_list * const list = parse_command_line(line);
     bool success;
 
@@ -102,7 +103,7 @@ print_tinyrl_output(int const fd)
         {
             if (isprint(c))
             {
-                fprintf(stdout, "%c", c);
+                fprintf(stdout, "<0x%x>", (unsigned)c);
             }
             else if (c == ESC)
             {
@@ -436,7 +437,7 @@ run_commands_via_prompt(bool const print_raw_codes)
     char * line;
     while ((line = minirl_readline(minirl, "prompt>")) != NULL)
     {
-        fprintf(stdout, "got line\n");
+        fprintf(stdout, "\ngot line\n");
         if (print_raw_codes)
         {
             fflush(output_fp);
