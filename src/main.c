@@ -318,6 +318,29 @@ tab_handler(minirl_st * const minirl,
     return minirl_insert_text(minirl, " ");
 }
 
+static bool cli_is_quoting(minirl_st * const minirl, bool end)
+{
+	const char *text;
+	unsigned i, point;
+	bool quote = false;
+	bool escape = false;
+
+    text = minirl_line_get(minirl);
+    point = end ? strlen(text) : minirl_point_get(minirl);
+
+	for (i = 0; i < point; i++) {
+		if (escape) {
+			escape = false;
+		} else if (text[i] == '\\') {
+			escape = true;
+		} else if (text[i] == '"') {
+			quote = !quote;
+		}
+	}
+
+	return quote || escape;
+}
+
 static bool space_handler(
     minirl_st * const minirl,
     uint32_t * const flags,
@@ -326,10 +349,8 @@ static bool space_handler(
 {
 	const char * const line = minirl_line_get(minirl);
 
-    if (line && *line == '#')
-    {
-		return minirl_insert_text(minirl, " ");
-    }
+    if (cli_is_quoting(minirl, false) || (line && *line == '#'))
+        return minirl_insert_text(minirl, " ");
 
     if (!cli_complete(minirl, true))
     {
@@ -337,6 +358,33 @@ static bool space_handler(
     }
 
 	return minirl_insert_text(minirl, " ");
+}
+
+static bool cli_enter(
+    minirl_st * const minirl,
+    uint32_t * const flags,
+    char const * const key,
+    void * const user_ctx)
+{
+	const char *line;
+	minirl_point_set(minirl, minirl_end_get(minirl));
+
+	if (cli_is_quoting(minirl, false))
+		return minirl_insert_text(minirl, "\n");
+
+    line = minirl_line_get(minirl);
+	if (!line || !*line) {
+        *flags |= minirl_key_handler_done;
+		return false;
+	}
+
+	if (*line == '#') {
+        *flags |= minirl_key_handler_done;
+		return true;
+	}
+
+    *flags |= minirl_key_handler_done;
+	return true;
 }
 
 static bool ctrl_right_handler(
@@ -378,6 +426,8 @@ run_commands_via_prompt(bool const print_raw_codes)
     bool const multiline_mode = true;
     minirl_bind_key(minirl, TAB, tab_handler, NULL);
     minirl_bind_key(minirl, ' ', space_handler, NULL);
+    minirl_bind_key(minirl, '\r', cli_enter, NULL);
+    minirl_bind_key(minirl, '\n', cli_enter, NULL);
     minirl_bind_keyseq(minirl, ESCAPESTR "[1;5C", ctrl_right_handler, NULL);
     minirl_bind_keyseq(minirl, ESCAPESTR "[1;5D", ctrl_left_handler, NULL);
 
