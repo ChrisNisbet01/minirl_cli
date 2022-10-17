@@ -305,20 +305,6 @@ static bool cli_complete(minirl_st * const minirl, bool allow_prefix)
     return ret;
 }
 
-static bool
-tab_handler(minirl_st * const minirl,
-            uint32_t * const flags,
-            char const * const key,
-            void * const user_ctx)
-{
-    if (!cli_complete(minirl, false))
-    {
-        return true;
-    }
-
-    return minirl_insert_text(minirl, " ");
-}
-
 static bool cli_is_quoting(minirl_st * const minirl, bool end)
 {
 	const char *text;
@@ -340,6 +326,23 @@ static bool cli_is_quoting(minirl_st * const minirl, bool end)
 	}
 
 	return quote || escape;
+}
+
+static bool
+tab_handler(minirl_st * const minirl,
+	    uint32_t * const flags,
+	    char const * const key,
+	    void * const user_ctx)
+{
+	if (cli_is_quoting(minirl, false)) {
+		return minirl_insert_text(minirl, "\t");
+	}
+
+	if (!cli_complete(minirl, false)) {
+		return true;
+	}
+
+	return minirl_insert_text(minirl, " ");
 }
 
 static bool space_handler(
