@@ -330,7 +330,7 @@ static bool cli_is_quoting(minirl_st * const minirl, bool end)
 
 static bool
 tab_handler(minirl_st * const minirl,
-	    uint32_t * const flags,
+	    minirl_key_handler_flags_st * const flags,
 	    char const * const key,
 	    void * const user_ctx)
 {
@@ -347,7 +347,7 @@ tab_handler(minirl_st * const minirl,
 
 static bool space_handler(
     minirl_st * const minirl,
-    uint32_t * const flags,
+    minirl_key_handler_flags_st * const flags,
     char const * const key,
     void * const user_ctx)
 {
@@ -365,10 +365,10 @@ static bool space_handler(
 }
 
 static bool cli_enter(
-    minirl_st * const minirl,
-    uint32_t * const flags,
-    char const * const key,
-    void * const user_ctx)
+	minirl_st * const minirl,
+	minirl_key_handler_flags_st * const flags,
+	char const * const key,
+	void * const user_ctx)
 {
 	const char *line;
 	minirl_point_set(minirl, minirl_end_get(minirl));
@@ -376,25 +376,25 @@ static bool cli_enter(
 	if (cli_is_quoting(minirl, false))
 		return minirl_insert_text(minirl, "\n");
 
-    line = minirl_line_get(minirl);
+	line = minirl_line_get(minirl);
 	if (!line || !*line) {
-        *flags |= minirl_key_handler_done;
+		flags->done = true;
 		return false;
 	}
 
 	if (*line == '#') {
-        *flags |= minirl_key_handler_done;
+		flags->done = true;
 		return true;
 	}
 
 	minirl_printf(minirl, "\n");
-	*flags |= minirl_key_handler_done;
+	flags->done = true;
 	return true;
 }
 
 static bool ctrl_right_handler(
     minirl_st * const minirl,
-    uint32_t * const flags,
+    minirl_key_handler_flags_st * const flags,
     char const * const key,
     void * const user_ctx)
 {
@@ -403,7 +403,7 @@ static bool ctrl_right_handler(
 
 static bool ctrl_left_handler(
     minirl_st * const minirl,
-    uint32_t * const flags,
+    minirl_key_handler_flags_st * const flags,
     char const * const key,
     void * const user_ctx)
 {
