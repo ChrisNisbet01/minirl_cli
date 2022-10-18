@@ -440,7 +440,7 @@ run_commands_via_prompt(bool const print_raw_codes)
     char * line;
     while ((line = minirl_readline(minirl, "prompt>")) != NULL)
     {
-        fprintf(stdout, "\ngot line\n");
+        fprintf(stderr, "got line\n");
         if (print_raw_codes)
         {
             fflush(output_fp);
