@@ -387,7 +387,8 @@ static bool cli_enter(
 		return true;
 	}
 
-    *flags |= minirl_key_handler_done;
+	minirl_printf(minirl, "\n");
+	*flags |= minirl_key_handler_done;
 	return true;
 }
 
