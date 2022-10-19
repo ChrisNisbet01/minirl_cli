@@ -330,7 +330,6 @@ static bool cli_is_quoting(minirl_st * const minirl, bool end)
 
 static bool
 tab_handler(minirl_st * const minirl,
-	    minirl_key_handler_flags_st * const flags,
 	    char const * const key,
 	    void * const user_ctx)
 {
@@ -347,7 +346,6 @@ tab_handler(minirl_st * const minirl,
 
 static bool space_handler(
     minirl_st * const minirl,
-    minirl_key_handler_flags_st * const flags,
     char const * const key,
     void * const user_ctx)
 {
@@ -366,7 +364,6 @@ static bool space_handler(
 
 static bool cli_enter(
 	minirl_st * const minirl,
-	minirl_key_handler_flags_st * const flags,
 	char const * const key,
 	void * const user_ctx)
 {
@@ -378,23 +375,22 @@ static bool cli_enter(
 
 	line = minirl_line_get(minirl);
 	if (!line || !*line) {
-		flags->done = true;
+		minirl_is_done(minirl);
 		return false;
 	}
 
 	if (*line == '#') {
-		flags->done = true;
+		minirl_is_done(minirl);
 		return true;
 	}
 
 	minirl_printf(minirl, "\n");
-	flags->done = true;
+	minirl_is_done(minirl);
 	return true;
 }
 
 static bool ctrl_right_handler(
     minirl_st * const minirl,
-    minirl_key_handler_flags_st * const flags,
     char const * const key,
     void * const user_ctx)
 {
@@ -403,7 +399,6 @@ static bool ctrl_right_handler(
 
 static bool ctrl_left_handler(
     minirl_st * const minirl,
-    minirl_key_handler_flags_st * const flags,
     char const * const key,
     void * const user_ctx)
 {
