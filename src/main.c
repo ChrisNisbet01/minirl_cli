@@ -323,24 +323,22 @@ space_handler(minirl_st * const minirl, char const * const key, void * const use
 
 static bool cli_enter(minirl_st * const minirl, char const * const key, void * const user_ctx)
 {
-	const char *line;
-	minirl_point_set(minirl, minirl_end_get(minirl));
-
 	if (cli_is_quoting(minirl, false))
 		return minirl_insert_text(minirl, "\n");
 
-	line = minirl_line_get(minirl);
+	minirl_point_set(minirl, minirl_end_get(minirl));
+
+	const char * const line = minirl_line_get(minirl);
+
 	if (!line || !*line) {
 		minirl_is_done(minirl);
 		return false;
 	}
 
-	if (*line == '#') {
-		minirl_is_done(minirl);
-		return true;
+	if (*line != '#') {
+		minirl_printf(minirl, "\n");
 	}
 
-	minirl_printf(minirl, "\n");
 	minirl_is_done(minirl);
 	return true;
 }
