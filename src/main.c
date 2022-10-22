@@ -382,7 +382,7 @@ run_commands_via_prompt(bool const print_raw_codes)
 
 	char *line;
 	while ((line = minirl_readline(minirl, "prompt>")) != NULL) {
-		fprintf(stderr, "got line\n");
+		fprintf(stderr, "got line '%s'\n", line);
 		if (print_raw_codes) {
 			fflush(output_fp);
 			print_tinyrl_output(output_pipe[0]);
@@ -391,6 +391,13 @@ run_commands_via_prompt(bool const print_raw_codes)
 		if (line[0] == 'q') {
 			free(line);
 			break;
+		}
+
+		if (line[0] == 'd') {
+			minirl_disable_echo(minirl, '\0');
+		}
+		if (line[0] == 'e') {
+			minirl_enable_echo(minirl);
 		}
 
 		if (line[0] != '\0') {
