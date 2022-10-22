@@ -396,6 +396,9 @@ run_commands_via_prompt(bool const print_raw_codes)
 		if (line[0] == 'd') {
 			minirl_disable_echo(minirl, '\0');
 		}
+		if (line[0] == '*') {
+			minirl_disable_echo(minirl, line[0]);
+		}
 		if (line[0] == 'e') {
 			minirl_enable_echo(minirl);
 		}
