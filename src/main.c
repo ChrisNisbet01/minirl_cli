@@ -296,14 +296,14 @@ static bool
 tab_handler(minirl_st * const minirl, char const * const key, void * const user_ctx)
 {
 	if (cli_is_quoting(minirl, false)) {
-		return minirl_insert_text(minirl, "\t");
+		return minirl_text_insert(minirl, "\t");
 	}
 
 	if (!cli_complete(minirl, false)) {
 		return true;
 	}
 
-	return minirl_insert_text(minirl, " ");
+	return minirl_text_insert(minirl, " ");
 }
 
 static bool
@@ -312,19 +312,19 @@ space_handler(minirl_st * const minirl, char const * const key, void * const use
 	const char * const line = minirl_line_get(minirl);
 
 	if (cli_is_quoting(minirl, false) || (line && *line == '#'))
-		return minirl_insert_text(minirl, " ");
+		return minirl_text_insert(minirl, " ");
 
 	if (!cli_complete(minirl, true)) {
 		return false;
 	}
 
-	return minirl_insert_text(minirl, " ");
+	return minirl_text_insert(minirl, " ");
 }
 
 static bool cli_enter(minirl_st * const minirl, char const * const key, void * const user_ctx)
 {
 	if (cli_is_quoting(minirl, false))
-		return minirl_insert_text(minirl, "\n");
+		return minirl_text_insert(minirl, "\n");
 
 	minirl_point_set(minirl, minirl_end_get(minirl));
 
@@ -375,8 +375,8 @@ run_commands_via_prompt(bool const print_raw_codes)
 	minirl_bind_key(minirl, ' ', space_handler, NULL);
 	minirl_bind_key(minirl, '\r', cli_enter, NULL);
 	minirl_bind_key(minirl, '\n', cli_enter, NULL);
-	minirl_bind_keyseq(minirl, ESCAPESTR "[1;5C", ctrl_right_handler, NULL);
-	minirl_bind_keyseq(minirl, ESCAPESTR "[1;5D", ctrl_left_handler, NULL);
+	minirl_bind_key_sequence(minirl, ESCAPESTR "[1;5C", ctrl_right_handler, NULL);
+	minirl_bind_key_sequence(minirl, ESCAPESTR "[1;5D", ctrl_left_handler, NULL);
 
 	fprintf(stdout, "'q' to quit\n");
 
@@ -394,13 +394,13 @@ run_commands_via_prompt(bool const print_raw_codes)
 		}
 
 		if (line[0] == 'd') {
-			minirl_disable_echo(minirl, '\0');
+			minirl_echo_disable(minirl, '\0');
 		}
 		if (line[0] == '*') {
-			minirl_disable_echo(minirl, line[0]);
+			minirl_echo_disable(minirl, line[0]);
 		}
 		if (line[0] == 'e') {
-			minirl_enable_echo(minirl);
+			minirl_echo_enable(minirl);
 		}
 
 		if (line[0] != '\0') {
@@ -408,7 +408,7 @@ run_commands_via_prompt(bool const print_raw_codes)
 			run_command_line(line);
 		}
 
-		minirl_free(line);
+		minirl_line_free(line);
 	}
 
 	minirl_delete(minirl);
