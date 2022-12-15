@@ -378,6 +378,8 @@ run_commands_via_prompt(bool const print_raw_codes)
 	minirl_bind_key_sequence(minirl, ESCAPESTR "[1;5C", ctrl_right_handler, NULL);
 	minirl_bind_key_sequence(minirl, ESCAPESTR "[1;5D", ctrl_left_handler, NULL);
 
+	minirl_force_isatty(minirl);
+
 	fprintf(stdout, "'q' to quit\n");
 
 	char *line;
